@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Relationship Quest ❤️</title>
+
+<style>
+body{
+margin:0;
+font-family:Arial;
+background:linear-gradient(135deg,#0f0c29,#302b63,#ff416c);
+color:white;
+text-align:center;
+}
+
+.app{
+max-width:420px;
+margin:auto;
+padding:15px;
+}
+
+.card{
+background:rgba(255,255,255,0.08);
+padding:15px;
+margin:12px 0;
+border-radius:15px;
+}
+
+input{
+width:92%;
+padding:10px;
+margin:6px 0;
+border:none;
+border-radius:10px;
+outline:none;
+}
+
+button{
+width:95%;
+padding:10px;
+border:none;
+border-radius:10px;
+background:white;
+font-weight:bold;
+cursor:pointer;
+}
+
+#log{
+text-align:left;
+font-size:13px;
+opacity:0.9;
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<h1>❤️ Relationship Quest</h1>
+
+<div class="card">
+<h3>Couple Setup</h3>
+<input id="p1" placeholder="Your Name">
+<input id="p2" placeholder="Partner Name">
+<button onclick="saveProfile()">Save</button>
+<p id="status"></p>
+</div>
+
+<div class="card">
+<h3>Today's Quest 🎯</h3>
+<p id="quest">Loading...</p>
+
+<input id="answer" placeholder="Your answer">
+<button onclick="submitAnswer()">Submit</button>
+
+<p id="result"></p>
+</div>
+
+<div class="card">
+<h3>Streak 🔥</h3>
+<p id="streak">0 days</p>
+</div>
+
+<div class="card">
+<h3>Memory Log 📖</h3>
+<div id="log"></div>
+</div>
+
+</div>
+
+<script>
+const quests = [
+"Describe your partner in 3 words ❤️",
+"What made you smile about them today?",
+"What do you miss about them right now?",
+"Rate their vibe today (1–10)",
+"One thing you secretly admire about them?",
+"If you could send them one message right now, what would it be?"
+];
+
+// SAFE INIT
+function safeGet(key, fallback){
+try{
+let v = localStorage.getItem(key);
+return v ? v : fallback;
+}catch(e){
+return fallback;
+}
+}
+
+// INIT APP
+window.onload = function(){
+loadProfile();
+setQuest();
+loadStreak();
+loadLog();
+};
+
+// PROFILE
+function saveProfile(){
+let p1 = document.getElementById("p1").value || "";
+let p2 = document.getElementById("p2").value || "";
+
+if(!p1 || !p2){
+alert("Enter both names");
+return;
+}
+
+localStorage.setItem("p1",p1);
+localStorage.setItem("p2",p2);
+
+document.getElementById("status").innerText =
+`${p1} ❤️ ${p2} connected`;
+}
+
+function loadProfile(){
+let p1 = safeGet("p1","");
+let p2 = safeGet("p2","");
+
+if(p1 && p2){
+document.getElementById("status").innerText =
+`${p1} ❤️ ${p2} connected`;
+}
+}
+
+// QUEST
+function setQuest(){
+let index = new Date().getDate() % quests.length;
+document.getElementById("quest").innerText = quests[index];
+}
+
+// ANSWER
+function submitAnswer(){
+let ans = document.getElementById("answer").value || "";
+if(ans.trim() === ""){
+alert("Write something first");
+return;
+}
+
+let log = safeGet("log","[]");
+let data;
+
+try{
+data = JSON.parse(log);
+}catch(e){
+data = [];
+}
+
+data.push({
+q: document.getElementById("quest").innerText,
+a: ans,
+t: new Date().toLocaleString()
+});
+
+localStorage.setItem("log",JSON.stringify(data));
+
+document.getElementById("answer").value = "";
+document.getElementById("result").innerText = "Saved ❤️";
+
+loadLog();
+updateStreak();
+}
+
+// STREAK (FIXED LOGIC)
+function updateStreak(){
+let last = parseInt(safeGet("last","0"));
+let streak = parseInt(safeGet("streak","0"));
+
+let now = Date.now();
+
+if(last === 0){
+streak = 1;
+}else if(now - last > 86400000){
+streak++;
+}
+
+localStorage.setItem("last",now);
+localStorage.setItem("streak",streak);
+
+document.getElementById("streak").innerText =
+streak + " days 🔥";
+}
+
+function loadStreak(){
+document.getElementById("streak").innerText =
+safeGet("streak","0") + " days 🔥";
+}
+
+// LOG
+function loadLog(){
+let box = document.getElementById("log");
+let log = safeGet("log","[]");
+
+let data;
+try{
+data = JSON.parse(log);
+}catch(e){
+data = [];
+}
+
+box.innerHTML = "";
+
+data.slice(-6).reverse().forEach(x=>{
+box.innerHTML += `
+<p>📌 <b>${x.t}</b><br>${x.q}<br>→ ${x.a}</p><hr>`;
+});
+}
+</script>
+
+</body>
+</html>
